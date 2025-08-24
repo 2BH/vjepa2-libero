@@ -1,13 +1,13 @@
-app: vjepa_droid
+app: vjepa_libero
 cpus_per_task: 12
-folder: /home/zhangb/ws/vjepa2/droid/4.8.vitg16-256px-8f
+folder: /home/zhangb/ws/vjepa2/libero/4.8.vitg16-256px-8f_Lshift_1
 mem_per_gpu: 48G
 nodes: 4
 tasks_per_node: 8
 data:
   batch_size: 8
   camera_views:
-  - left_mp4_path
+  - image
   crop_size: 256
   datasets:
     # CSV file, each line is a trajectory dir path

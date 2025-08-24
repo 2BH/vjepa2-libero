@@ -1,0 +1,162 @@
+# LIBERO VJEPA Training Configuration
+# This configuration file is designed for training VJEPA models on LIBERO task suites
+
+meta:
+  resume_checkpoint: null
+  pretrain_checkpoint: null
+  load_predictor: false
+  context_encoder_key: "encoder"
+  target_encoder_key: "target_encoder"
+  load_encoder: true
+  seed: 0
+  save_every_freq: 5
+  skip_batches: -1
+  use_sdpa: false
+  sync_gc: false
+  dtype: "bfloat16"
+
+model:
+  compile_model: false
+  use_activation_checkpointing: false
+  model_name: "vit_base"
+  pred_depth: 6
+  pred_num_heads: null
+  pred_embed_dim: 384
+  pred_is_frame_causal: true
+  uniform_power: false
+  use_rope: false
+  use_silu: false
+  use_pred_silu: false
+  wide_silu: true
+  use_extrinsics: false
+
+data:
+  datasets: ["/path/to/libero/dataset"]
+  dataset_fpcs: [16]
+  camera_frame: false
+  camera_views: ["left_mp4_path", "right_mp4_path"]
+  stereo_view: false
+  batch_size: 8
+  tubelet_size: 2
+  fps: 5
+  crop_size: 224
+  patch_size: 16
+  pin_mem: true
+  num_workers: 4
+  persistent_workers: true
+  
+  # LIBERO specific parameters
+  task_suite: "libero_100"  # Options: libero_spatial, libero_object, libero_goal, libero_100
+  use_task_conditioning: true
+  include_language_instructions: true
+
+data_aug:
+  horizontal_flip: true
+  random_resize_aspect_ratio: [0.75, 1.33]
+  random_resize_scale: [0.3, 1.0]
+  motion_shift: false
+  reprob: 0.0
+  auto_augment: true
+
+loss:
+  loss_exp: 2.0
+  normalize_reps: true
+  auto_steps: 1
+
+optimization:
+  ipe: null  # Will be set automatically based on dataset size
+  weight_decay: 1e-6
+  final_weight_decay: 1e-6
+  epochs: 100
+  anneal: 0.1
+  warmup: 0.1
+  start_lr: 1e-6
+  lr: 1e-4
+  final_lr: 1e-6
+  enc_lr_scale: 1.0
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# LIBERO Task Suite Configurations
+# Each task suite has different characteristics and requirements
+
+# LIBERO-Spatial: Focuses on spatial reasoning tasks
+libero_spatial_config:
+  task_suite: "libero_spatial"
+  max_episode_length: 500
+  spatial_reasoning_weight: 1.0
+  object_manipulation_weight: 0.5
+
+# LIBERO-Object: Focuses on object-centric tasks
+libero_object_config:
+  task_suite: "libero_object"
+  max_episode_length: 800
+  object_centric_weight: 1.0
+  spatial_reasoning_weight: 0.3
+
+# LIBERO-Goal: Focuses on goal-directed tasks
+libero_goal_config:
+  task_suite: "libero_goal"
+  max_episode_length: 1000
+  goal_achievement_weight: 1.0
+  task_completion_weight: 0.8
+
+# LIBERO-100: Comprehensive benchmark with 100 tasks
+libero_100_config:
+  task_suite: "libero_100"
+  max_episode_length: 1000
+  multi_task_weight: 1.0
+  knowledge_transfer_weight: 0.7
+  lifelong_learning_weight: 0.5
+
+# Training Modes
+training_modes:
+  # Standard VJEPA training on LIBERO data
+  standard:
+    use_task_conditioning: false
+    include_language_instructions: false
+    
+  # Task-conditioned training
+  task_conditioned:
+    use_task_conditioning: true
+    include_language_instructions: false
+    
+  # Language-conditioned training
+  language_conditioned:
+    use_task_conditioning: true
+    include_language_instructions: true
+    
+  # Multi-task training
+  multi_task:
+    use_task_conditioning: true
+    include_language_instructions: true
+    multi_task_sampling: true
+
+# Evaluation Configuration
+evaluation:
+  eval_freq: 10  # Evaluate every N epochs
+  num_eval_episodes: 100
+  success_threshold: 0.8
+  metrics:
+    - "success_rate"
+    - "episode_length"
+    - "task_completion_time"
+    - "action_efficiency"
+    - "knowledge_transfer_score"
+
+# Logging and Monitoring
+logging:
+  log_freq: 10
+  tensorboard: true
+  wandb: false
+  save_checkpoints: true
+  checkpoint_freq: 1
+  save_best_model: true
+  
+# Hardware Configuration
+hardware:
+  gpu_memory_fraction: 0.9
+  mixed_precision: true
+  gradient_accumulation_steps: 1
+  distributed_training: true
+  num_gpus: 4
