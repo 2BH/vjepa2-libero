@@ -26,6 +26,8 @@ logger = getLogger()
 def init_libero_data(
     batch_size,
     rank=0,
+    input_length=16,
+    train_episodes=1200,
     world_size=1,
     camera_key="image",
     drop_last=True,
@@ -36,15 +38,19 @@ def init_libero_data(
     repo_id = "physical-intelligence/libero"
 
     delta_timestamps = {
-        # loads 4 images: 1 second before current frame, 500 ms before, 200 ms before, and current frame
-        camera_key: [i*0.3 for i in range(16)],
-        # loads 6 state vectors: 1.5 seconds before, 1 second before, ... 200 ms, 100 ms, and current frame
-        "state": [i*0.3 for i in range(16)],
-        # loads 64 action vectors: current frame, 1 frame in the future, 2 frames, ... 63 frames in the future
-        "actions": [i*0.3 for i in range(15)],
+        camera_key: [i*0.3 for i in range(input_length)],
+        "state": [i*0.3 for i in range(input_length)],
+        "actions": [(i+1)*0.3 for i in range(input_length-1)],
     }
 
-    dataset = LeRobotDataset(repo_id, delta_timestamps=delta_timestamps, episodes=[i for i in range(1200)])
+    if isinstance(train_episodes, int):
+        train_episodes = [i for i in range(train_episodes)]
+    elif isinstance(train_episodes, list):
+        train_episodes = train_episodes
+    else:
+        raise ValueError(f"train_episodes must be an int or a list, got {type(train_episodes)}")
+
+    dataset = LeRobotDataset(repo_id, delta_timestamps=delta_timestamps, episodes=train_episodes)
     dist_sampler = torch.utils.data.distributed.DistributedSampler(
         dataset, num_replicas=world_size, rank=rank, shuffle=True
     )
